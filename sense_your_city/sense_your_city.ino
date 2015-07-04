@@ -35,9 +35,10 @@
 #include <Digital_Light_TSL2561.h>
 
 /* User Configuration */
-#define USER_ID             "PROJETO1" 
-#define PRIVATE_KEY         "12345"
+#define USER_ID             "PROJECT1" 		// not used
+#define PRIVATE_KEY         "12345"			// not used
 #define LNGLAT              "[-21, -43]"    // Get your LONGITUDE, LATITUDE at http://mygeoposition.com/
+#define STATION				"1"				// must be unique!
 
 // Check your data --> http://localdata-sensors.herokuapp.com/api/v1/sources/USER_ID_GOES_HERE/entries?startIndex=0&count=5&sort=desc
 
@@ -100,15 +101,16 @@ unsigned long push_interval = 10000;  //ms
 // CURL Request //
 //////////////////
 const char curlStart[] PROGMEM = "curl POST -d '";
-const char curlClose[] PROGMEM = "' X.X.X.X:3000/sensor"; 
+const char curlClose[] PROGMEM = "' 146.164.4.4:3000/sensor"; 
 
 const char latlng[] PROGMEM = LNGLAT; 
 const char userId[] PROGMEM = USER_ID;
 const char privateKey[] PROGMEM = PRIVATE_KEY;
 
 // How many data fields are in your stream?
-const int NUM_FIELDS = 10;
+const int NUM_FIELDS = 11;
 // What are the names of your fields?
+const char fieldMETA[] PROGMEM = "station";
 const char field0[] PROGMEM = "timestamp";
 const char field1[] PROGMEM = "location";
 const char field2[] PROGMEM = "airquality";
@@ -119,7 +121,7 @@ const char field5[] PROGMEM = "light";
 const char field6[] PROGMEM = "sound";
 const char field7[] PROGMEM = "temperature";
 const char field8[] PROGMEM = "uv";
-const char* fieldName[NUM_FIELDS] = {field0, field1, field2, field2_1, field3, field4, field5, field6, field7, field8};
+const char* fieldName[NUM_FIELDS] = {fieldMETA, field0, field1, field2, field2_1, field3, field4, field5, field6, field7, field8};
 // We'll use this array later to store our field data
 String fieldData[NUM_FIELDS];
 // Used to send command to Shell, and view response
@@ -172,6 +174,11 @@ void setup()
   
   /* Sync clock with NTP */
   setClock();
+  
+  /* Set station name */
+  fieldData[0] = STATION;
+  
+  /* Ready */
   Serial.println(F("Done."));
   Serial.println(F("=========== Ready to Stream ==========="));
 }
@@ -222,28 +229,28 @@ void loop()
   if((millis() - push_starttime) > push_interval)
   {
     push_starttime = millis();
-    fieldData[0] = String(timeInEpoch())+F("000");  //Timestamp is multipied by 1000 for UNIX time 
-    fieldData[1] = String(FP(latlng));              
+    fieldData[1] = String(timeInEpoch())+F("000");  //Timestamp is multipied by 1000 for UNIX time 
+    fieldData[2] = String(FP(latlng));              
     switch (aq_result)
     {
       case AQ_WARMUP:
-        fieldData[2] = String(F("WarmUp")); break;
+        fieldData[3] = String(F("WarmUp")); break;
       case AQ_FRESH:
-        fieldData[2] = String(F("Fresh")); break;
+        fieldData[3] = String(F("Fresh")); break;
       case AQ_LOW_POLLUTION:
-        fieldData[2] = String(F("LowPollution")); break;
+        fieldData[3] = String(F("LowPollution")); break;
       case AQ_POLLUTION:
-        fieldData[2] = String(F("Pollution")); break;
+        fieldData[3] = String(F("Pollution")); break;
       case AQ_HIGH_POLLUTION:
-        fieldData[2] = String(F("HighPollution")); break;
+        fieldData[3] = String(F("HighPollution")); break;
     }
-    fieldData[3] = String(analogRead(pin_air_quality));  // ~0ms
-    fieldData[4] = String(iReadDensityDust());          // ~0ms, pcs/0.01cf or pcs/283ml
-    fieldData[5] = String(iReadHumidity());            // >250ms, %
-    fieldData[6] = String(iReadLux());                // >100ms , lux
-    fieldData[7] = String(iReadSoundRawVol());       // ~0ms, mV;
-    fieldData[8] = String(iReadTemperature());      // >250ms, F
-    fieldData[9] = String(iReadUVRawVol());        // > 128ms, mV
+    fieldData[4] = String(analogRead(pin_air_quality));  // ~0ms
+    fieldData[5] = String(iReadDensityDust());          // ~0ms, pcs/0.01cf or pcs/283ml
+    fieldData[6] = String(iReadHumidity());            // >250ms, %
+    fieldData[7] = String(iReadLux());                // >100ms , lux
+    fieldData[8] = String(iReadSoundRawVol());       // ~0ms, mV;
+    fieldData[9] = String(iReadTemperature());      // >250ms, F
+    fieldData[10] = String(iReadUVRawVol());        // > 128ms, mV
 
     // Post Data
     Serial.println(F("\nPosting Data!"));
@@ -482,7 +489,6 @@ void postData()
   curlCmd = FP(curlStart);
   int i = 0;
   for (i=0; i<(NUM_FIELDS-1); i++) {
-    //curlCmd += String("\"") + FP((PGM_P)fieldName[i]) + "\": " + fieldData[i] + ", "; // Add our data fields to the command
     curlCmd += String("") + FP((PGM_P)fieldName[i]) + "=" + fieldData[i] + "&"; // Add our data fields to the command
   }
   curlCmd += String("") + FP((PGM_P)fieldName[NUM_FIELDS-1]) + "=" + fieldData[NUM_FIELDS-1];
