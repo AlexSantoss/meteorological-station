@@ -35,9 +35,9 @@
 #include <Digital_Light_TSL2561.h>
 
 /* User Configuration */
-#define USER_ID             "USER_ID_GOES_HERE" 
-#define PRIVATE_KEY         "PRIVATE_KEY_GOES_HERE"
-#define LNGLAT              "[LONGITUDE, LATITUDE]"    // Get your LONGITUDE, LATITUDE at http://mygeoposition.com/
+#define USER_ID             "PROJETO1" 
+#define PRIVATE_KEY         "12345"
+#define LNGLAT              "[-21, -43]"    // Get your LONGITUDE, LATITUDE at http://mygeoposition.com/
 
 // Check your data --> http://localdata-sensors.herokuapp.com/api/v1/sources/USER_ID_GOES_HERE/entries?startIndex=0&count=5&sort=desc
 
@@ -99,8 +99,9 @@ unsigned long push_interval = 10000;  //ms
 //////////////////
 // CURL Request //
 //////////////////
-const char curlStart[] PROGMEM = "curl -X POST -H \"Authorization: Bearer <KEY>\" -k -H \"Content-Type: application/json\" -d '{";
-const char curlClose[] PROGMEM = " }'  https://localdata-sensors.herokuapp.com/api/sources/<ID>/entries"; 
+const char curlStart[] PROGMEM = "curl POST -d '";
+const char curlClose[] PROGMEM = "' X.X.X.X:3000/sensor"; 
+
 const char latlng[] PROGMEM = LNGLAT; 
 const char userId[] PROGMEM = USER_ID;
 const char privateKey[] PROGMEM = PRIVATE_KEY;
@@ -226,15 +227,15 @@ void loop()
     switch (aq_result)
     {
       case AQ_WARMUP:
-        fieldData[2] = String(F("\"WarmUp\"")); break;
+        fieldData[2] = String(F("WarmUp")); break;
       case AQ_FRESH:
-        fieldData[2] = String(F("\"Fresh\"")); break;
+        fieldData[2] = String(F("Fresh")); break;
       case AQ_LOW_POLLUTION:
-        fieldData[2] = String(F("\"LowPollution\"")); break;
+        fieldData[2] = String(F("LowPollution")); break;
       case AQ_POLLUTION:
-        fieldData[2] = String(F("\"Pollution\"")); break;
+        fieldData[2] = String(F("Pollution")); break;
       case AQ_HIGH_POLLUTION:
-        fieldData[2] = String(F("\"HighPollution\"")); break;
+        fieldData[2] = String(F("HighPollution")); break;
     }
     fieldData[3] = String(analogRead(pin_air_quality));  // ~0ms
     fieldData[4] = String(iReadDensityDust());          // ~0ms, pcs/0.01cf or pcs/283ml
@@ -481,9 +482,10 @@ void postData()
   curlCmd = FP(curlStart);
   int i = 0;
   for (i=0; i<(NUM_FIELDS-1); i++) {
-    curlCmd += String("\"") + FP((PGM_P)fieldName[i]) + "\": " + fieldData[i] + ", "; // Add our data fields to the command
+    //curlCmd += String("\"") + FP((PGM_P)fieldName[i]) + "\": " + fieldData[i] + ", "; // Add our data fields to the command
+    curlCmd += String("") + FP((PGM_P)fieldName[i]) + "=" + fieldData[i] + "&"; // Add our data fields to the command
   }
-  curlCmd += String("\"") + FP((PGM_P)fieldName[NUM_FIELDS-1]) + "\": " + fieldData[NUM_FIELDS-1];
+  curlCmd += String("") + FP((PGM_P)fieldName[NUM_FIELDS-1]) + "=" + fieldData[NUM_FIELDS-1];
   curlCmd += FP(curlClose); // Add the server URL, including public key
   curlCmd.replace(String(F("<ID>")), String(FP(userId)) );
   curlCmd.replace(String(F("<KEY>")), String(FP(privateKey)) );
