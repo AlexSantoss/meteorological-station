@@ -234,15 +234,15 @@ void loop()
     switch (aq_result)
     {
       case AQ_WARMUP:
-        fieldData[3] = String(F("WarmUp")); break;
+        fieldData[3] = String(F("0")); break; // WarmUp
       case AQ_FRESH:
-        fieldData[3] = String(F("Fresh")); break;
+        fieldData[3] = String(F("1")); break; // Fresh
       case AQ_LOW_POLLUTION:
-        fieldData[3] = String(F("LowPollution")); break;
+        fieldData[3] = String(F("2")); break; // Low Pollution
       case AQ_POLLUTION:
-        fieldData[3] = String(F("Pollution")); break;
-      case AQ_HIGH_POLLUTION:
-        fieldData[3] = String(F("HighPollution")); break;
+        fieldData[3] = String(F("3")); break; // Pollution
+      case AQ_HIGH_POLLUTION: 
+        fieldData[3] = String(F("4")); break; // High Pollution
     }
     fieldData[4] = String(analogRead(pin_air_quality));  // ~0ms
     fieldData[5] = String(iReadDensityDust());          // ~0ms, pcs/0.01cf or pcs/283ml
