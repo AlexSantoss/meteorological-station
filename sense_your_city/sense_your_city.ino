@@ -101,7 +101,7 @@ unsigned long push_interval = 10000;  //ms
 // CURL Request //
 //////////////////
 const char curlStart[] PROGMEM = "curl POST -d '";
-const char curlClose[] PROGMEM = "' 146.164.4.4:3000/sensor"; 
+const char curlClose[] PROGMEM = "' rootshell.privatedns.org:40000/sensor"; 
 
 const char latlng[] PROGMEM = LNGLAT; 
 const char userId[] PROGMEM = USER_ID;
