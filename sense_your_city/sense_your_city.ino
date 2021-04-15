@@ -28,7 +28,8 @@
  * THE SOFTWARE.
  *****************************************************************/
 
-#include <Process.h>     // Process.h is used to construct Shell commands and read the results.
+#include <Process.h> // Process.h is used to construct Shell commands and read the results.
+#include <FileIO.h>
 #include <avr/pgmspace.h>
 #include <DHT.h>
 #include <Wire.h>
@@ -49,6 +50,7 @@
 #define pin_air_quality     A1      // Air Quality sensor
 #define pin_dht             4       // Humidity and Temperature sensor (D4)
 #define DHTTYPE             DHT22   // DHT 22 (AM2302)
+#define pin_ozone			A3
 
 #define FP(string_literal) (reinterpret_cast<const __FlashStringHelper *>(string_literal))
 
@@ -59,6 +61,7 @@ float iReadDensityDust(void);
 unsigned long iReadLux(void);
 float iReadUVRawVol(void);
 int iReadSoundRawVol(void);
+float iReadOzone(void);
 
 /* Particulate Matter sensor */
 unsigned long dust_starttime;
@@ -108,7 +111,7 @@ const char userId[] PROGMEM = USER_ID;
 const char privateKey[] PROGMEM = PRIVATE_KEY;
 
 // How many data fields are in your stream?
-const int NUM_FIELDS = 11;
+const int NUM_FIELDS = 12;
 // What are the names of your fields?
 const char fieldMETA[] PROGMEM = "station";
 const char field0[] PROGMEM = "timestamp";
@@ -121,7 +124,8 @@ const char field5[] PROGMEM = "light";
 const char field6[] PROGMEM = "sound";
 const char field7[] PROGMEM = "temperature";
 const char field8[] PROGMEM = "uv";
-const char* fieldName[NUM_FIELDS] = {fieldMETA, field0, field1, field2, field2_1, field3, field4, field5, field6, field7, field8};
+const char field9[] PROGMEM = "ozone";
+const char* fieldName[NUM_FIELDS] = {fieldMETA, field0, field1, field2, field2_1, field3, field4, field5, field6, field7, field8, field9};
 // We'll use this array later to store our field data
 String fieldData[NUM_FIELDS];
 // Used to send command to Shell, and view response
@@ -166,6 +170,9 @@ void setup()
   pinMode(pin_air_quality, INPUT);
   air_quality_sensor_init_starttime = millis();
 
+  /* Ozone Sensor */
+  pinMode(pin_ozone, INPUT);
+
   /* other */
   push_starttime = 0;
   
@@ -173,7 +180,7 @@ void setup()
   checkInternet();
   
   /* Sync clock with NTP */
-  setClock();
+  //setClock();
   
   /* Set station name */
   fieldData[0] = STATION;
@@ -249,9 +256,9 @@ void loop()
     fieldData[6] = String(iReadHumidity());            // >250ms, %
     fieldData[7] = String(iReadLux());                // >100ms , lux
     fieldData[8] = String(iReadSoundRawVol());       // ~0ms, mV;
-    fieldData[9] = String(iReadTemperature());      // >250ms, F
+    fieldData[9] = String(iReadTemperature());      // >250ms, C
     fieldData[10] = String(iReadUVRawVol());        // > 128ms, mV
-
+    fieldData[11] = String(iReadOzone());          // ~0ms, ppb
     // Post Data
     Serial.println(F("\nPosting Data!"));
     postData(); // the postData() function does all the work,see below.
@@ -476,6 +483,25 @@ int iReadSoundRawVol() {
   snd_raw_max = 0;
   return snd;
   //return snd_last_avg * (int)(4980.0f / 1023.0f);
+}
+
+float iReadOzone() {
+	int value = analogRead(pin_ozone);
+	return value*(1990.0f/1023.0f) + 10;
+}
+
+void writeCSV() {
+  String csvLine;
+  for(int i=1; i<NUM_FIELDS; i++)
+    csvLine += String("") + fieldData[i] + ";";
+  Serial.println(csvLine);
+  
+  File data = FileSystem.open("/mnt/sda1/log.csv", FILE_APPEND);
+  if(data) {
+    data.println(csvLine);
+    data.close();
+    Serial.println("foi ok");
+  } else Serial.println("nao conseguiu abrir");
 }
 
 //*****************************************************************************
