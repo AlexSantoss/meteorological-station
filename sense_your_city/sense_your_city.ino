@@ -144,7 +144,7 @@ void setup()
   delay(2000); // Wait for usb serial port to initialize
 
   /* Wire Begin */
-  Wire.begin();
+  //Wire.begin();
 
   Serial.println(F("******DataCanvasSensorNode******\r\n"));
   
@@ -177,7 +177,7 @@ void setup()
   push_starttime = 0;
   
   /* Check that internet connection is established */
-  checkInternet();
+  //checkInternet();
   
   /* Sync clock with NTP */
   //setClock();
@@ -261,7 +261,8 @@ void loop()
     fieldData[11] = String(iReadOzone());          // ~0ms, ppb
     // Post Data
     Serial.println(F("\nPosting Data!"));
-    postData(); // the postData() function does all the work,see below.
+    //postData(); // the postData() function does all the work,see below.
+    writeCSV();
   }
   
   //read response from the post process
