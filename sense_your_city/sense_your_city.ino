@@ -36,10 +36,10 @@
 #include <Digital_Light_TSL2561.h>
 
 /* User Configuration */
-#define USER_ID             "PROJECT1" 		// not used
-#define PRIVATE_KEY         "12345"			// not used
+#define USER_ID             "PROJECT1"     // not used
+#define PRIVATE_KEY         "12345"     // not used
 #define LNGLAT              "[-21, -43]"    // Get your LONGITUDE, LATITUDE at http://mygeoposition.com/
-#define STATION				"1"				// must be unique!
+#define STATION       "1"       // must be unique!
 
 // Check your data --> http://localdata-sensors.herokuapp.com/api/v1/sources/USER_ID_GOES_HERE/entries?startIndex=0&count=5&sort=desc
 
@@ -50,7 +50,7 @@
 #define pin_air_quality     A1      // Air Quality sensor
 #define pin_dht             4       // Humidity and Temperature sensor (D4)
 #define DHTTYPE             DHT22   // DHT 22 (AM2302)
-#define pin_ozone			A3
+#define pin_ozone     A3
 
 #define FP(string_literal) (reinterpret_cast<const __FlashStringHelper *>(string_literal))
 
@@ -144,7 +144,7 @@ void setup()
   delay(2000); // Wait for usb serial port to initialize
 
   /* Wire Begin */
-  //Wire.begin();
+  Wire.begin();
 
   Serial.println(F("******DataCanvasSensorNode******\r\n"));
   
@@ -177,7 +177,7 @@ void setup()
   push_starttime = 0;
   
   /* Check that internet connection is established */
-  //checkInternet();
+  checkInternet();
   
   /* Sync clock with NTP */
   //setClock();
@@ -261,8 +261,8 @@ void loop()
     fieldData[11] = String(iReadOzone());          // ~0ms, ppb
     // Post Data
     Serial.println(F("\nPosting Data!"));
-    //postData(); // the postData() function does all the work,see below.
-    writeCSV();
+    postGoogle(); // the postData() function does all the work,see below.
+   // writeCSV();
   }
   
   //read response from the post process
@@ -487,8 +487,8 @@ int iReadSoundRawVol() {
 }
 
 float iReadOzone() {
-	int value = analogRead(pin_ozone);
-	return value*(1990.0f/1023.0f) + 10;
+  int value = analogRead(pin_ozone);
+  return value*(1990.0f/1023.0f) + 10;
 }
 
 void writeCSV() {
@@ -503,6 +503,17 @@ void writeCSV() {
     data.close();
     Serial.println("foi ok");
   } else Serial.println("nao conseguiu abrir");
+}
+
+void postGoogle() {
+  String line;
+  for(int i=1; i<NUM_FIELDS; i++)
+    line += String("") + fieldData[i] + ";";
+    
+  line =String("/root/pub_msg.sh \"") + line + '"';
+  Serial.println(line);
+
+  postProcess.runShellCommandAsynchronously(line);
 }
 
 //*****************************************************************************

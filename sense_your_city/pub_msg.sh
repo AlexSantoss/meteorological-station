@@ -1,6 +1,6 @@
 #!/bin/bash
-function b64tr() { base64 -w 0 | tr '+/' '-_' | tr -d '=$'; }
-function b64sed() { base64 | sed s/\+/-/ | sed -E s/=+$//; }
+function b64tr() { openssl base64 -A | tr '+/' '-_' | tr -d '=$'; }
+function b64sed() { openssl base64 | sed s/\+/-/ | sed -E s/=+$//; }
 
 timeiat=$(date +%s)
 timeexp=$(expr $timeiat + 30)
